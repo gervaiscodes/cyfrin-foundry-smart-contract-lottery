@@ -2,19 +2,40 @@
 
 pragma solidity ^0.8.19;
 
-contract Raffle {
+import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+
+contract Raffle is VRFConsumerBaseV2 {
     error Raffle__NotEnoughEthSent();
+
+    uint16 private constant REQUEST_CONFIRMATION = 3;
+    uint32 private constant NUM_WORDS = 1;
 
     uint256 private immutable i_entranceFee;
     uint256 private immutable i_interval;
+    VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
+    uint64 private immutable i_subscriptionId;
+    uint32 private immutable i_callbackGasLimit;
+    bytes32 private immutable i_gasLane;
     address payable[] private s_players;
     uint256 private s_lastTimestamp;
 
     event EnteredRaffle(address indexed player);
 
-    constructor(uint256 entranceFee, uint256 interval) {
+    constructor(
+        uint256 entranceFee,
+        uint256 interval,
+        address vrfCoordinator,
+        bytes32 gasLane,
+        uint64 subscriptionId,
+        uint32 callbackGasLimit
+    ) VRFConsumerBaseV2(vrfCoordinator) {
         i_entranceFee = entranceFee;
         i_interval = interval;
+        i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinator);
+        i_gasLane = gasLane;
+        i_subscriptionId = subscriptionId;
+        i_callbackGasLimit = callbackGasLimit;
         s_lastTimestamp = block.timestamp;
     }
 
@@ -31,7 +52,24 @@ contract Raffle {
         if(block.timestamp - s_lastTimestamp < i_interval) {
             revert();
         }
+
+        uint256 requestId = i_vrfCoordinator.requestRandomWords(
+            i_gasLane,
+            i_subscriptionId,
+            REQUEST_CONFIRMATION,
+            i_callbackGasLimit,
+            NUM_WORDS
+        );
     }
+
+    function fullfillRandomWords(
+        uint256 requestId,
+        uint256[] memory randomWords
+    ) internal override {
+
+    }
+
+
 
     function getEntranceFee() external view returns(uint256) {
         return i_entranceFee;
