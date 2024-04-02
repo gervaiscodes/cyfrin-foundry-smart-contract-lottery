@@ -10,7 +10,7 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     error Raffle__NotEnoughEthSent();
     error Raffle__TransferFailed();
     error Raffle__RaffleNotOpen();
-    error Raffle__RaffleUpkeepNotNeeded();
+    error Raffle__RaffleUpkeepNotNeeded(uint256 balance, uint256 numPlayers, uint256 raffleState);
 
     enum RaffleState {
         OPEN,
@@ -88,7 +88,11 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     function performUpkeep(bytes calldata /* performData */) external override {
         (bool upkeepNeeded, ) = checkUpkeep(bytes(""));
         if(!upkeepNeeded) {
-            revert Raffle__RaffleUpkeepNotNeeded();
+            revert Raffle__RaffleUpkeepNotNeeded(
+                address(this).balance,
+                s_players.length,
+                uint256(s_raffleState)
+            );
         }
 
         s_raffleState = RaffleState.CALCULATING;
