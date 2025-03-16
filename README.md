@@ -1,5 +1,7 @@
 # Raffle Lottery Smart Contract
 
+![Tests badge](https://github.com/gervaiscodes/cyfrin-foundry-smart-contract-lottery/actions/workflows/test.yml/badge.svg)
+
 ## Overview
 
 This project implements a decentralized raffle lottery system using Solidity and Foundry. The smart contracts facilitate a fair lottery system where participants can enter by paying a fee, and a winner is randomly selected based on Chainlink VRF (Verifiable Random Function).
